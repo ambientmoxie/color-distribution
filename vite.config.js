@@ -1,8 +1,9 @@
 export default {
   root: "src",
+  base: "/kawano-grid",
   build: {
     outDir: "../dist",
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 3000,
   },
   // rollupOptions: {
   //   input: {
