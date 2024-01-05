@@ -1,6 +1,6 @@
 export default {
   root: "src",
-  base: "/kawano-grid",
+  base: "/projects/kawano-grid",
   build: {
     outDir: "../dist",
     chunkSizeWarningLimit: 3000,
