@@ -1,30 +1,23 @@
 import "../scss/style.scss";
 import p5 from "p5";
-import * as dat from "dat.gui";
 import { Pane } from "tweakpane";
-import { defaultConfig, COLORS, RATIO, SPREAD } from "./defaultConfig";
-
-console.log(Object.keys(COLORS));
+import {
+  defaultConfig,
+  COLORS,
+  RATIO,
+  SPREAD,
+  GRID,
+  SEED,
+} from "./defaultConfig";
 
 function sketch(p) {
   let currentColor;
   let canvasSizeH;
   let canvasSizeW;
 
-  /*
-
-    ! Rappel du fonctionnement de la GUI :
-
-    Structure: gui.add(object, "property", 0, 1).name("foo").onChange(callbackFunction);
-
-    object: This is the object that contains the properties that will be controlled by the GUI.
-    "property": This is the property of the object that the GUI will control.
-    .name("foo"): Allows to give a name to the controller.
-    .onChange(callbackFunction): Defines a callback function that will be executed with each detected change.
-
-    ! API : https://github.com/dataarts/dat.gui/blob/master/API.md
-
-    */
+  // * -----------------------------------------------
+  // * Init TweekPane
+  // * -----------------------------------------------
 
   function initTweek() {
     const pane = new Pane();
@@ -34,34 +27,29 @@ function sketch(p) {
       title: "Colors",
     });
 
-    // Add each color from the defaultConfig.colors array
+    // Add each color
     Object.keys(COLORS).forEach((key, index) => {
       colorsFolder.addBinding(COLORS, key, {
         label: `color ${index + 1}`,
       });
     });
 
-    // Add size folder
-    const ratioFolder = pane.addFolder({
-      title: "Ratio",
+    // Canvas folder. Contains property like : ratio, spread, division and seed
+    const canvasFolder = pane.addFolder({
+      title: "Canvas",
     });
 
-    // Add each color from the defaultConfig.colors array
-      ratioFolder.addBinding(RATIO, "ratio", {
-        options: {
-          square: "square",
-          portrait: "portrait",
-          landscape: "landscape",
-        },
-      });
-
-    // Add distribution folder
-    const spreadFolder = pane.addFolder({
-      title: "Spread",
+    // Bind ratio
+    canvasFolder.addBinding(RATIO, "ratio", {
+      options: {
+        square: "square",
+        portrait: "portrait",
+        landscape: "landscape",
+      },
     });
 
-    // Add each color from the defaultConfig.colors array
-    spreadFolder.addBinding(SPREAD, "spread", {
+    // Bind spread
+    canvasFolder.addBinding(SPREAD, "spread", {
       options: {
         vertical: "vertical",
         horizontal: "horizontal",
@@ -69,79 +57,39 @@ function sketch(p) {
       },
     });
 
-    // Add utils folder
-    const utilsFolder = pane.addFolder({
-      title: "Utils",
+    // Bind division
+    canvasFolder.addBinding(GRID, "division", {
+      min: 10,
+      max: 100,
+      step: 20,
     });
 
-    // Add randomize button
-    const shuffleBtn = utilsFolder.addButton({
-      title: "Shuffle",
+    // Bind seed
+    canvasFolder.addBinding(SEED, "seed", {
+      min: 0,
+      max: 1,
     });
 
-    // Add download button
-    const dwdbtn = utilsFolder.addButton({
-      title: "Download",
-    });
+    // Shuffle button
+    pane.addButton({ title: "Shuffle" }).on("click", applySettings);
 
-    dwdbtn.on("click", () => {
-      console.log("downloaded");
-    });
+    // Download button
+    pane.addButton({ title: "Download" }).on("click", saveCurrentCanvas);
 
-    shuffleBtn.on("click", () => {
-      console.log("shuffle");
-    });
+    pane.on("change", applySettings);
   }
 
-  function initGUI() {
-    const gui = new dat.GUI();
-
-    // * ------------------------------------------
-    // * Dossier couleurs
-    // * ------------------------------------------
-
-    const colorsFolder = gui.addFolder("Colors");
-    for (let i = 0; i < defaultConfig.colors.length; i++) {
-      colorsFolder
-        .addColor(defaultConfig.colors, i)
-        .onChange(applySettings)
-        .name("Color " + (i + 1));
+  function setRatio() {
+    if (RATIO.ratio == "landscape") {
+      canvasSizeW = 600;
+      canvasSizeH = 400;
+    } else if (RATIO.ratio == "portrait") {
+      canvasSizeW = 400;
+      canvasSizeH = 600;
+    } else {
+      canvasSizeW = 600;
+      canvasSizeH = 600;
     }
-    colorsFolder.open();
-
-    // * ------------------------------------------
-    // * Dossier dimensions
-    // * ------------------------------------------
-
-    const dimFolder = gui.addFolder("Dimensions");
-    for (let i = 0; i < defaultConfig.dimensions.length; i++) {
-      let key = Object.keys(defaultConfig.dimensions[i])[0];
-      dimFolder
-        .add(defaultConfig.dimensions[i], key, 0.1, 1)
-        .onChange(applySettings);
-    }
-    dimFolder.open();
-
-    // * ------------------------------------------
-    // * Dossier utilities
-    // * ------------------------------------------
-
-    const utils = gui.addFolder("Utils");
-
-    utils
-      .add(defaultConfig, "seed", 0.01, 0.5)
-      .name("Seed")
-      .onChange(applySettings);
-
-    utils
-      .add({ applyChanges: applySettings }, "applyChanges")
-      .name("Create Composition");
-
-    utils
-      .add({ saveCanvas: saveCurrentCanvas }, "saveCanvas")
-      .name("Save Canvas");
-
-    utils.open();
   }
 
   /*
@@ -156,10 +104,9 @@ function sketch(p) {
   */
 
   function applySettings() {
-    canvasSizeH = window.innerHeight * defaultConfig.dimensions[1].Height;
-    canvasSizeW = window.innerWidth * defaultConfig.dimensions[0].Width;
+    setRatio();
     p.resizeCanvas(canvasSizeW, canvasSizeH);
-    drawGrid(p, defaultConfig.gridSize);
+    drawGrid(p, GRID.division);
   }
 
   /*
@@ -181,13 +128,36 @@ function sketch(p) {
 
   function drawGrid(p, amount) {
     const w = p.width / amount;
-    const h = p.height / amount;
+    const h = w;
 
-    for (let y = 0; y < amount; y++) {
-      for (let x = 0; x < amount; x++) {
-        if (p.random(1) < defaultConfig.seed) {
-          currentColor = getRandomColor();
+    let x, y;
+
+    // Loop ranges
+
+    const largerRange = SPREAD.spread == "horizontal" ? amount * 2 : amount;
+    const smallerRange = SPREAD.spread == "horizontal" ? amount : amount * 2;
+
+    for (let i = 0; i < largerRange; i++) {
+      for (let j = 0; j < smallerRange; j++) {
+        // Determine color based on spread type
+        if (SPREAD.spread === "horizontal" || SPREAD.spread === "vertical") {
+          if (p.random(1) < SEED.seed) {
+            currentColor = getRandomColor();
+          }
+        } else if (SPREAD.spread === "noise") {
+          // Noise-based color change
+          let noiseFactor = p.noise(j * 0.1, i * 0.1);
+          if (noiseFactor < SEED.seed) {
+            currentColor = getRandomColor();
+          }
         }
+
+        // Determine x and y positions based on spread
+
+        x = SPREAD.spread == "horizontal" ? j : i;
+        y = SPREAD.spread == "horizontal" ? i : j;
+
+        // Draw the rectangle
         p.stroke(currentColor);
         p.fill(currentColor);
         p.rect(w * x, h * y, w, h);
@@ -226,48 +196,17 @@ function sketch(p) {
 
   p.setup = () => {
     p.pixelDensity(5);
-    canvasSizeH = window.innerHeight * defaultConfig.dimensions[1].Height;
-    canvasSizeW = window.innerWidth * defaultConfig.dimensions[0].Width;
+    setRatio();
     const cnv = p.createCanvas(canvasSizeW, canvasSizeH);
     cnv.parent(document.body);
     cnv.id("p5-cnv");
 
     p.background(...defaultConfig.bgColor);
     currentColor = getRandomColor();
-    drawGrid(p, defaultConfig.gridSize);
+    drawGrid(p, GRID.division);
 
-    // initGUI();
     initTweek();
-  };
-
-  /*
-
-  * -----------------------------------------------
-  * Function Apply Settings
-  * -----------------------------------------------
-
-  Redraws a new composition if the dimensions of the browser window change.
-
-  */
-
-  p.windowResized = () => {
-    canvasSizeH = window.innerHeight * defaultConfig.dimensions[1].Height;
-    canvasSizeW = window.innerWidth * defaultConfig.dimensions[0].Width;
-    p.resizeCanvas(canvasSizeW, canvasSizeH);
-    p.background(...defaultConfig.bgColor);
-    drawGrid(p, defaultConfig.gridSize);
   };
 }
 
 new p5(sketch);
-
-/*
-
- & -----------------------------------------------
- & TODO
- & -----------------------------------------------
-
- - Horizontal distribution
- - Noise distibution
-
- */
