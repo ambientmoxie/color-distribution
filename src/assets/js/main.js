@@ -15,10 +15,8 @@ function sketch(p) {
   let canvasSizeH;
   let canvasSizeW;
 
-  // * -----------------------------------------------
-  // * Init TweekPane
-  // * -----------------------------------------------
 
+  // Init tweak pane
   function initTweek() {
     const pane = new Pane();
 
@@ -34,12 +32,10 @@ function sketch(p) {
       });
     });
 
-    // Canvas folder. Contains property like : ratio, spread, division and seed
-    const canvasFolder = pane.addFolder({
-      title: "Canvas",
-    });
+    // Create canvas folder
+    const canvasFolder = pane.addFolder({ title: "Canvas" });
 
-    // Bind ratio
+    // Bind values inside canvas folder
     canvasFolder.addBinding(RATIO, "ratio", {
       options: {
         square: "square",
@@ -48,7 +44,6 @@ function sketch(p) {
       },
     });
 
-    // Bind spread
     canvasFolder.addBinding(SPREAD, "spread", {
       options: {
         vertical: "vertical",
@@ -57,28 +52,16 @@ function sketch(p) {
       },
     });
 
-    // Bind division
-    canvasFolder.addBinding(GRID, "division", {
-      min: 10,
-      max: 100,
-      step: 20,
-    });
+    canvasFolder.addBinding(GRID, "division", { min: 10, max: 100, step: 20 });
+    canvasFolder.addBinding(SEED, "seed", { min: 0, max: 1 });
 
-    // Bind seed
-    canvasFolder.addBinding(SEED, "seed", {
-      min: 0,
-      max: 1,
-    });
-
-    // Shuffle button
-    pane.addButton({ title: "Shuffle" }).on("click", applySettings);
-
-    // Download button
-    pane.addButton({ title: "Download" }).on("click", saveCurrentCanvas);
+    pane.addButton({ title: "Shuffle" }).on("click", applySettings); // Shuffle button
+    pane.addButton({ title: "Download" }).on("click", saveCurrentCanvas); // Download button
 
     pane.on("change", applySettings);
   }
 
+  // Define size on the canvas depending given orientation
   function setRatio() {
     if (RATIO.ratio == "landscape") {
       canvasSizeW = 600;
@@ -92,34 +75,14 @@ function sketch(p) {
     }
   }
 
-  /*
-
-  * -----------------------------------------------
-  * Function Apply Settings
-  * -----------------------------------------------
-
-  This function redefines the width and height of the canvas based on the new values set by the user.
-  It redraws the grid, resulting in a new distribution of colors.
-
-  */
-
+  // Resize canvas depending on given
   function applySettings() {
     setRatio();
     p.resizeCanvas(canvasSizeW, canvasSizeH);
     drawGrid(p, GRID.division);
   }
 
-  /*
-
-  * -----------------------------------------------
-  * Function Get Random Color
-  * -----------------------------------------------
-
-  This function defines a random index and applies it to the color palette.
-  LSS: Returns a random color.
-
-  */
-
+  // Returns a random color
   function getRandomColor() {
     const keys = Object.keys(COLORS);
     const randomKey = keys[p.int(p.random(keys.length))];
@@ -145,7 +108,6 @@ function sketch(p) {
             currentColor = getRandomColor();
           }
         } else if (SPREAD.spread === "noise") {
-          // Noise-based color change
           let noiseFactor = p.noise(j * 0.1, i * 0.1);
           if (noiseFactor < SEED.seed) {
             currentColor = getRandomColor();
@@ -153,7 +115,6 @@ function sketch(p) {
         }
 
         // Determine x and y positions based on spread
-
         x = SPREAD.spread == "horizontal" ? j : i;
         y = SPREAD.spread == "horizontal" ? i : j;
 
@@ -165,46 +126,26 @@ function sketch(p) {
     }
   }
 
-  /*
-
-  * -----------------------------------------------
-  * Function Save Current Canvas
-  * -----------------------------------------------
-
-  Save the composition
-
-  */
-
+  // Save canvas
   function saveCurrentCanvas() {
     p.saveCanvas("kawano-artwork", "png");
   }
 
-  /*
-
-  * -----------------------------------------------
-  * Function Setup
-  * -----------------------------------------------
-
-  Dessine le canvas par default, cette fonction définie : 
-  La densition de pixel (la résolution de la compostion pour une image téléchargée de bonne qualité).
-  La largeur et la hauteur du canvas.
-  Définie une couleur alétaoire pour la première boucle.
-  Dessine la grille et applique les couleurs.
-  Initialise la GUI.
-
-  */
-
+  // Setup canvas
   p.setup = () => {
     p.pixelDensity(5);
+
+    // Set canvas initial size and permanent ID.
     setRatio();
     const cnv = p.createCanvas(canvasSizeW, canvasSizeH);
     cnv.parent(document.body);
     cnv.id("p5-cnv");
 
-    p.background(...defaultConfig.bgColor);
-    currentColor = getRandomColor();
+    // Draw background and grid
+    // p.background(...defaultConfig.bgColor);
     drawGrid(p, GRID.division);
 
+    // Init tweakpane
     initTweek();
   };
 }
