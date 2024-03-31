@@ -1,7 +1,8 @@
 import "../scss/style.scss";
 import p5 from "p5";
 import * as dat from "dat.gui";
-import { defaultConfig } from "./defaultConfig";
+import { Pane } from "tweakpane";
+import { defaultConfig, COLORS } from "./defaultConfig";
 
 function sketch(p) {
   let currentColor;
@@ -22,6 +23,23 @@ function sketch(p) {
     ! API : https://github.com/dataarts/dat.gui/blob/master/API.md
 
     */
+
+  function initTweek() {
+    const pane = new Pane();
+
+    // Add color folder
+    const colorsFolder = pane.addFolder({
+      title: "Colors",
+    });
+
+    // Add each color from the defaultConfig.colors array
+    Object.keys(COLORS).forEach((key, index) => {
+      colorsFolder.addBinding(COLORS, key, {
+        label: `Color ${index + 1}`,
+        view: "color",
+      });
+    });
+  }
 
   function initGUI() {
     const gui = new dat.GUI();
@@ -165,7 +183,8 @@ function sketch(p) {
     currentColor = getRandomColor();
     drawGrid(p, defaultConfig.gridSize);
 
-    initGUI();
+    // initGUI();
+    initTweek();
   };
 
   /*
@@ -188,7 +207,6 @@ function sketch(p) {
 }
 
 new p5(sketch);
-
 
 /*
 

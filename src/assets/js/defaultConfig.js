@@ -7,3 +7,11 @@ export const defaultConfig = {
   seed: 0.06,
   gridSize: 30,
 };
+
+export const COLORS = {
+  color1: '#f05',
+  color2: '#f07',
+  color3: '#f08',
+  color4: '#f09',
+  color5: '#f03',
+}
