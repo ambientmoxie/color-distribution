@@ -2,7 +2,9 @@ import "../scss/style.scss";
 import p5 from "p5";
 import * as dat from "dat.gui";
 import { Pane } from "tweakpane";
-import { defaultConfig, COLORS } from "./defaultConfig";
+import { defaultConfig, COLORS, RATIO, SPREAD } from "./defaultConfig";
+
+console.log(Object.keys(COLORS));
 
 function sketch(p) {
   let currentColor;
@@ -35,9 +37,59 @@ function sketch(p) {
     // Add each color from the defaultConfig.colors array
     Object.keys(COLORS).forEach((key, index) => {
       colorsFolder.addBinding(COLORS, key, {
-        label: `Color ${index + 1}`,
-        view: "color",
+        label: `color ${index + 1}`,
       });
+    });
+
+    // Add size folder
+    const ratioFolder = pane.addFolder({
+      title: "Ratio",
+    });
+
+    // Add each color from the defaultConfig.colors array
+      ratioFolder.addBinding(RATIO, "ratio", {
+        options: {
+          square: "square",
+          portrait: "portrait",
+          landscape: "landscape",
+        },
+      });
+
+    // Add distribution folder
+    const spreadFolder = pane.addFolder({
+      title: "Spread",
+    });
+
+    // Add each color from the defaultConfig.colors array
+    spreadFolder.addBinding(SPREAD, "spread", {
+      options: {
+        vertical: "vertical",
+        horizontal: "horizontal",
+        noise: "noise",
+      },
+    });
+
+    // Add utils folder
+    const utilsFolder = pane.addFolder({
+      title: "Utils",
+    });
+
+    // Add randomize button
+    const shuffleBtn = utilsFolder.addButton({
+      title: "Shuffle",
+    });
+
+    // Add download button
+    const dwdbtn = utilsFolder.addButton({
+      title: "Download",
+    });
+
+    dwdbtn.on("click", () => {
+      console.log("downloaded");
+    });
+
+    shuffleBtn.on("click", () => {
+      console.log("shuffle");
     });
   }
 
@@ -122,8 +174,9 @@ function sketch(p) {
   */
 
   function getRandomColor() {
-    const index = p.int(p.random(defaultConfig.colors.length));
-    return defaultConfig.colors[index];
+    const keys = Object.keys(COLORS);
+    const randomKey = keys[p.int(p.random(keys.length))];
+    return COLORS[randomKey];
   }
 
   function drawGrid(p, amount) {

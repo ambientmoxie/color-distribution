@@ -9,9 +9,18 @@ export const defaultConfig = {
 };
 
 export const COLORS = {
-  color1: '#f05',
-  color2: '#f07',
-  color3: '#f08',
-  color4: '#f09',
-  color5: '#f03',
-}
+  color1: "#f05",
+  color2: "#f07",
+  color3: "#f08",
+  color4: "#f09",
+  color5: "#f03",
+};
+
+export const RATIO = {
+  ratio: "square",
+};
+
+export const SPREAD = {
+  spread: "horizontal",
+};
+
