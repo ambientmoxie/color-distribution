@@ -1,9 +1,9 @@
 import "../scss/style.scss";
 import p5 from "p5";
 import { Pane } from "tweakpane";
+let shuffleButton;
 
 // Default configuration
-
 export const defaultConfig = {
   colors: {
     color0: "#fff",
@@ -11,7 +11,7 @@ export const defaultConfig = {
     color2: "#ff4514",
     color3: "#195dff",
   },
-  ratio: "square",
+  // ratio: "square",
   spread: "horizontal",
   seed: 0.3,
   division: 40,
@@ -19,37 +19,30 @@ export const defaultConfig = {
 
 function sketch(p) {
   let currentColor;
-  let canvasSizeH;
-  let canvasSizeW;
+  const canvasSizeW = 500;
+  const canvasSizeH = 500;
 
-  // Init tweak pane
+  /*
+   * ---------------------------------------
+   * Init TweakPane
+   * ---------------------------------------
+   */
+
   function initTweek() {
     const pane = new Pane();
 
-    // Add color folder
-    const colorsFolder = pane.addFolder({
-      title: "Colors",
-    });
+    // Add folders
+    const colorsFolder = pane.addFolder({ title: "Colors" });
+    const canvasFolder = pane.addFolder({ title: "Canvas" });
 
-    // Add each color
+    // Add colors
     Object.keys(defaultConfig.colors).forEach((key, index) => {
       colorsFolder.addBinding(defaultConfig.colors, key, {
         label: `color ${index + 1}`,
       });
     });
 
-    // Create canvas folder
-    const canvasFolder = pane.addFolder({ title: "Canvas" });
-
-    // Bind values inside canvas folder
-    canvasFolder.addBinding(defaultConfig, "ratio", {
-      options: {
-        square: "square",
-        portrait: "portrait",
-        landscape: "landscape",
-      },
-    });
-
+    // Add spread type
     canvasFolder.addBinding(defaultConfig, "spread", {
       options: {
         vertical: "vertical",
@@ -58,114 +51,126 @@ function sketch(p) {
       },
     });
 
+    // Add division value
     canvasFolder.addBinding(defaultConfig, "division", {
       min: 10,
-      max: 100,
-      step: 20,
+      max: 200,
+      step: 10,
     });
+
+    // Add seed
     canvasFolder.addBinding(defaultConfig, "seed", { min: 0, max: 1 });
 
-    pane.addButton({ title: "Shuffle" }).on("click", applySettings); // Shuffle button
-    pane.addButton({ title: "Download" }).on("click", saveCurrentCanvas); // Download button
+    
+    // Add button 
+    shuffleButton = pane .addButton({ title: "Shuffle" }).on("click", applySettings); // Shuffle is stored inside a value to be disabled in case of noise spread scenario
+    pane.addButton({ title: "Download" }).on("click", saveCurrentCanvas);
 
+    // update canvas every time a value is updated
     pane.on("change", applySettings);
-  }
-
-  // Define size on the canvas depending given orientation
-  function setRatio() {
-    if (defaultConfig.ratio == "landscape") {
-      canvasSizeW = 600;
-      canvasSizeH = 400;
-    } else if (defaultConfig.ratio == "portrait") {
-      canvasSizeW = 400;
-      canvasSizeH = 600;
-    } else {
-      canvasSizeW = 600;
-      canvasSizeH = 600;
-    }
   }
 
   // Resize canvas depending on given
   function applySettings() {
-    setRatio();
-    p.resizeCanvas(canvasSizeW, canvasSizeH);
+    if (defaultConfig.spread === "noise") {
+      shuffleButton.disabled = true;
+    } else {
+      shuffleButton.disabled = false;
+    }
     drawGrid(p, defaultConfig.division);
   }
 
-  // Returns a random color
+  /*
+   * ---------------------------------------
+   * Mapping colors depending on spread type
+   * ---------------------------------------
+   */
+
+  // Using noise
+  function mapNoiseToColor(noiseVal, colors) {
+    const colorKeys = Object.keys(colors);
+    const scaledIndex = Math.floor(noiseVal * colorKeys.length);
+    return colors[colorKeys[scaledIndex]];
+  }
+
+  // Using random
   function getRandomColor() {
     const keys = Object.keys(defaultConfig.colors);
     const randomKey = keys[p.floor(p.random(keys.length))];
     return defaultConfig.colors[randomKey];
   }
 
+  // Draw the grid, based on vertical/horizontal or noise distribution
   function drawGrid(p, amount) {
     const w = p.width / amount;
     const h = w;
-
     let x, y;
 
-    // Random distrubution
-
-    const largerRange =
-      defaultConfig.spread == "horizontal" ? amount * 2 : amount;
-    const smallerRange =
-      defaultConfig.spread == "horizontal" ? amount : amount * 2;
-
-    for (let i = 0; i < largerRange; i++) {
-      for (let j = 0; j < smallerRange; j++) {
-        // Determine color based on spread type
-        if (
-          defaultConfig.spread === "horizontal" ||
-          defaultConfig.spread === "vertical"
-        ) {
+    // Random distrubution scenario
+    if (
+      defaultConfig.spread == "horizontal" ||
+      defaultConfig.spread == "vertical"
+    ) {
+      for (let i = 0; i < amount; i++) {
+        for (let j = 0; j < amount; j++) {
           if (p.random(1) < defaultConfig.seed) {
             currentColor = getRandomColor();
           } else {
             currentColor = currentColor;
           }
-        } else if (defaultConfig.spread === "noise") {
-          let noiseFactor = p.noise(j * 0.1, i * 0.1);
-          if (noiseFactor < defaultConfig.seed) {
-            currentColor = getRandomColor();
-          }
+
+          // Determine x and y positions based on spread
+          x = defaultConfig.spread == "horizontal" ? j : i;
+          y = defaultConfig.spread == "horizontal" ? i : j;
+
+          // Draw the rectangle
+          p.stroke(currentColor);
+          p.fill(currentColor);
+          p.rect(w * x, h * y, w, h);
         }
+      }
+    } else {
 
-        // Determine x and y positions based on spread
-        x = defaultConfig.spread == "horizontal" ? j : i;
-        y = defaultConfig.spread == "horizontal" ? i : j;
+      // Noise distribution scenario
+      for (let x = 0; x < amount; x++) {
+        for (let y = 0; y < amount; y++) {
+          
+          // Calculate a noise value for current cell
+          let noiseVal = p.noise(
+            (x * defaultConfig.seed) / 5,
+            (y * defaultConfig.seed) / 5
+          );
 
-        // Draw the rectangle
-        p.stroke(currentColor);
-        p.fill(currentColor);
-        p.rect(w * x, h * y, w, h);
+          // Map noise value to one of the predefined colors
+          currentColor = mapNoiseToColor(noiseVal, defaultConfig.colors);
+
+          // Draw the rectangle with the color determined by noise
+          p.fill(currentColor);
+          p.stroke(currentColor);
+          p.rect(x * w, y * h, w, h);
+        }
       }
     }
-
-    // Noise distribution
-  }
-
-  // Save canvas
-  function saveCurrentCanvas() {
-    p.saveCanvas("kawano-artwork", "png");
   }
 
   // Setup canvas
   p.setup = () => {
-    // Set canvas initial size and permanent ID.
-    setRatio();
     const cnv = p.createCanvas(canvasSizeW, canvasSizeH);
     cnv.parent(document.body);
     cnv.id("p5-cnv");
 
     // Draw background and grid
-    // p.background(...defaultConfig.bgColor);
-    currentColor = getRandomColor();
+    currentColor = getRandomColor(); // Set initial color
     drawGrid(p, defaultConfig.division);
 
     // Init tweakpane
     initTweek();
   };
+}
+
+// Save canvas
+function saveCurrentCanvas() {
+  p.saveCanvas("kawano-artwork", "png");
 }
 
 new p5(sketch);
