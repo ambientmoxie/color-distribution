@@ -15,7 +15,6 @@ function sketch(p) {
   let canvasSizeH;
   let canvasSizeW;
 
-
   // Init tweak pane
   function initTweek() {
     const pane = new Pane();
@@ -85,7 +84,8 @@ function sketch(p) {
   // Returns a random color
   function getRandomColor() {
     const keys = Object.keys(COLORS);
-    const randomKey = keys[p.int(p.random(keys.length))];
+
+    const randomKey = keys[p.floor(p.random(keys.length))];
     return COLORS[randomKey];
   }
 
@@ -106,6 +106,8 @@ function sketch(p) {
         if (SPREAD.spread === "horizontal" || SPREAD.spread === "vertical") {
           if (p.random(1) < SEED.seed) {
             currentColor = getRandomColor();
+          } else {
+            currentColor = currentColor;
           }
         } else if (SPREAD.spread === "noise") {
           let noiseFactor = p.noise(j * 0.1, i * 0.1);
@@ -143,6 +145,7 @@ function sketch(p) {
 
     // Draw background and grid
     // p.background(...defaultConfig.bgColor);
+    currentColor = getRandomColor();
     drawGrid(p, GRID.division);
 
     // Init tweakpane

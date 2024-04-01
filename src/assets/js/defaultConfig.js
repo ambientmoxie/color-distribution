@@ -9,10 +9,10 @@ export const defaultConfig = {
 };
 
 export const COLORS = {
-  color1: "#fff",
-  color2: "#24262e",
-  color3: "#ff4514",
-  color4: "#195dff",
+  color0: "#fff",
+  color1: "#24262e",
+  color2: "#ff4514",
+  color3: "#195dff",
 };
 
 export const RATIO = {
@@ -24,7 +24,7 @@ export const SPREAD = {
 };
 
 export const SEED = {
-  seed:0.6,
+  seed: 0.3,
 };
 
 export const GRID = {
