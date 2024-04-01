@@ -95,13 +95,8 @@ function sketch(p) {
 
     let x, y;
 
-    // Loop ranges
-
-    const largerRange = SPREAD.spread == "horizontal" ? amount * 2 : amount;
-    const smallerRange = SPREAD.spread == "horizontal" ? amount : amount * 2;
-
-    for (let i = 0; i < largerRange; i++) {
-      for (let j = 0; j < smallerRange; j++) {
+    for (let i = 0; i < p.height / w; i++) {
+      for (let j = 0; j < amount; j++) {
         // Determine color based on spread type
         if (SPREAD.spread === "horizontal" || SPREAD.spread === "vertical") {
           if (p.random(1) < SEED.seed) {
@@ -126,6 +121,11 @@ function sketch(p) {
         p.rect(w * x, h * y, w, h);
       }
     }
+
+    // Noise distribution
+
+    
+
   }
 
   // Save canvas
