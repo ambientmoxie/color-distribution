@@ -155,6 +155,7 @@ function sketch(p) {
 
   // Setup canvas
   p.setup = () => {
+    p.pixelDensity(2);
     const cnv = p.createCanvas(canvasSizeW, canvasSizeH);
     cnv.parent(document.body);
     cnv.id("p5-cnv");
@@ -166,11 +167,13 @@ function sketch(p) {
     // Init tweakpane
     initTweek();
   };
+
+
+  // Save canvas
+  function saveCurrentCanvas() {
+    p.saveCanvas("kawano-artwork", "png");
+  }
 }
 
-// Save canvas
-function saveCurrentCanvas() {
-  p.saveCanvas("kawano-artwork", "png");
-}
 
 new p5(sketch);
