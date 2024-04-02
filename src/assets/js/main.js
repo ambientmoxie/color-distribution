@@ -6,10 +6,10 @@ let shuffleButton;
 // Default configuration
 export const defaultConfig = {
   colors: {
-    color0: "#fff",
-    color1: "#24262e",
-    color2: "#ff4514",
-    color3: "#195dff",
+    color0: "#61d359",
+    color1: "#ea4137",
+    color2: "#3984f7",
+    color3: "#f19f39",
   },
   // ratio: "square",
   spread: "horizontal",
@@ -53,9 +53,9 @@ function sketch(p) {
 
     // Add division value
     canvasFolder.addBinding(defaultConfig, "division", {
-      min: 10,
-      max: 200,
-      step: 10,
+      min: 5,
+      max: 100,
+      step: 5,
     });
 
     // Add seed
